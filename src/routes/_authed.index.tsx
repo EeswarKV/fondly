@@ -22,7 +22,7 @@ const fetchDashboard = createServerFn({ method: "GET" }).handler(async () => {
   return { completion, totalTasks, doneTasks, totalBudget, totalSpent, recentExpenses: expenses ?? [], openBlockers: blockers ?? [] };
 });
 
-export const Route = createFileRoute("/_authed/")({ staleTime: 30_000,
+export const Route = createFileRoute("/_authed/")({ staleTime: Infinity,
   loader: () => fetchDashboard(),
   component: Dashboard,
 });

@@ -34,7 +34,7 @@ const fetchRoadmap = createServerFn({ method: "GET" }).handler(async () => {
 });
 
 export const Route = createFileRoute("/_authed/roadmap")({
-  staleTime: 30_000,
+  staleTime: Infinity,
   loader: () => fetchRoadmap(),
   component: Roadmap,
 });

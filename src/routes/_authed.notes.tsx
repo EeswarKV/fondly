@@ -13,7 +13,7 @@ const fetchNotes = createServerFn({ method: "GET" }).handler(async () => {
 });
 
 export const Route = createFileRoute("/_authed/notes")({
-  staleTime: 30_000,
+  staleTime: Infinity,
   loader: () => fetchNotes(),
   component: Notes,
 });

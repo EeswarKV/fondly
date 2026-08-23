@@ -23,7 +23,7 @@ const fetchPrelaunch = createServerFn({ method: "GET" }).handler(async () => {
 });
 
 export const Route = createFileRoute("/_authed/prelaunch")({
-  staleTime: 30_000,
+  staleTime: Infinity,
   loader: () => fetchPrelaunch(),
   component: PreLaunch,
 });
