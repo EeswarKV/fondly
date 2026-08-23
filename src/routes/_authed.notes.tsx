@@ -33,6 +33,7 @@ function Notes() {
   const [text, setText] = useState("");
   const [reminder, setReminder] = useState("");
   const [saving, setSaving] = useState(false);
+  const [err, setErr] = useState<string | null>(null);
 
   const now = new Date();
   const sorted = [...notes].sort((a, b) => {
@@ -45,15 +46,16 @@ function Notes() {
 
   const addNote = async () => {
     if (!text.trim()) return;
-    setSaving(true);
+    setSaving(true); setErr(null);
     const supabase = getSupabaseBrowserClient();
-    await supabase.from("notes").insert({
+    const { error } = await supabase.from("notes").insert({
       owner_id: user.id,
       text: text.trim(),
       reminder_at: reminder || null,
     });
-    setText(""); setReminder("");
     setSaving(false);
+    if (error) { setErr(error.message); return; }
+    setText(""); setReminder("");
     router.invalidate();
   };
   const toggleDone = async (n: Note) => {
@@ -71,8 +73,10 @@ function Notes() {
     <div>
       <h2 style={{ fontFamily: display, fontSize: 22, margin: "0 0 4px" }}>My notes</h2>
       <p style={{ fontSize: 13.5, color: P.cocoaSoft, marginBottom: 20 }}>
-        Private to you \u2014 only your account can read these, enforced by the database itself.
+        Private to you — only your account can read these, enforced by the database itself.
       </p>
+
+      {err && <div style={{ marginBottom: 12, padding: "10px 14px", background: "#fff0f0", border: `1px solid ${P.rust}`, borderRadius: 8, fontSize: 13, color: P.rust }}>{err}</div>}
 
       <Card style={{ marginBottom: 20 }}>
         <textarea
@@ -109,7 +113,7 @@ function Notes() {
                   )}
                 </div>
               </div>
-              <button onClick={() => remove(n)} style={{ border: "none", background: "transparent", color: P.cocoaSoft, cursor: "pointer", fontSize: 13 }}>\u2715</button>
+              <button onClick={() => remove(n)} style={{ border: "none", background: "transparent", color: P.cocoaSoft, cursor: "pointer", fontSize: 13 }}>✕</button>
             </div>
           </div>
         );

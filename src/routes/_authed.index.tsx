@@ -40,7 +40,7 @@ function Dashboard() {
     <div>
       <h2 style={{ fontFamily: display, fontSize: 22, margin: "0 0 4px" }}>Dashboard</h2>
       <p style={{ fontSize: 13.5, color: P.cocoaSoft, marginBottom: 20 }}>
-        {completion}% of the way to launch \u00b7 {doneTasks}/{totalTasks} roadmap tasks verified
+        {completion}% of the way to launch · {doneTasks}/{totalTasks} roadmap tasks verified
       </p>
 
       <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 12, marginBottom: 16 }}>

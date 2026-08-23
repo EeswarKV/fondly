@@ -28,6 +28,7 @@ function PreLaunch() {
   const [note, setNote] = useState("");
   const [categoryId, setCategoryId] = useState(categories[0]?.id ?? "");
   const [saving, setSaving] = useState(false);
+  const [err, setErr] = useState<string | null>(null);
 
   const spentByCategory = (catId: string) =>
     expenses.filter((e) => e.category_id === catId).reduce((s, e) => s + Number(e.amount), 0);
@@ -38,16 +39,17 @@ function PreLaunch() {
 
   const addExpense = async () => {
     if (!amount || !note || !categoryId) return;
-    setSaving(true);
+    setSaving(true); setErr(null);
     const supabase = getSupabaseBrowserClient();
-    await supabase.from("prelaunch_expenses").insert({
+    const { error } = await supabase.from("prelaunch_expenses").insert({
       category_id: categoryId,
       note,
       amount: Number(amount),
       logged_by: user.id,
     });
-    setAmount(""); setNote("");
     setSaving(false);
+    if (error) { setErr(error.message); return; }
+    setAmount(""); setNote("");
     router.invalidate();
   };
 
@@ -100,6 +102,7 @@ function PreLaunch() {
           <button onClick={addExpense} disabled={saving} style={{ width: "100%", background: "#fff", color: P.accent, border: `1px solid ${P.accent}`, fontWeight: 700, padding: 9, borderRadius: 6, fontSize: 13, cursor: "pointer" }}>
             {saving ? "Saving..." : "Add to log"}
           </button>
+          {err && <div style={{ marginTop: 8, fontSize: 12, color: P.rust }}>{err}</div>}
           <div style={{ marginTop: 14, fontSize: 12, color: P.cocoaSoft, marginBottom: 6 }}>Recent</div>
           {expenses.slice(0, 4).map((e) => (
             <div key={e.id} style={{ display: "flex", justifyContent: "space-between", fontSize: 12, padding: "5px 0", borderBottom: `1px solid ${P.line}` }}>

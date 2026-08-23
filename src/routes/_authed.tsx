@@ -30,7 +30,7 @@ function AuthedLayout() {
     <div style={{ display: "flex", minHeight: "100vh", background: "#fff", fontFamily: body, color: P.cocoa }}>
       <div style={{ width: 200, borderRight: `1px solid ${P.line}`, padding: "20px 12px", flexShrink: 0, display: "flex", flexDirection: "column" }}>
         <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "0 8px", marginBottom: 24 }}>
-          <span style={{ color: P.accent, fontSize: 18 }}>\u25c6</span>
+          <span style={{ color: P.accent, fontSize: 18 }}>◆</span>
           <span style={{ fontSize: 13, fontWeight: 700 }}>Chocolatehouse</span>
         </div>
 
