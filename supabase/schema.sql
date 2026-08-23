@@ -18,7 +18,8 @@ create table if not exists founders (
 create table if not exists phases (
   id uuid primary key default gen_random_uuid(),
   label text not null,            -- e.g. 'Now – Sep 2026'
-  sort_order int not null default 0
+  sort_order int not null default 0,
+  tab text not null default 'business'  -- 'business' | 'chocolate'
 );
 
 create table if not exists tasks (

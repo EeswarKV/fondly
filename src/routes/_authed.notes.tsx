@@ -109,7 +109,7 @@ function Notes() {
                 type="datetime-local"
                 value={reminder}
                 onChange={(e) => setReminder(e.target.value)}
-                className="rounded-lg border border-slate-200 px-2.5 py-1.5 text-xs outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
+                className="rounded-lg border border-slate-200 px-2.5 py-1.5 text-xs bg-white text-slate-900 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
               />
             </div>
             <button
@@ -159,7 +159,7 @@ function Notes() {
                           type="datetime-local"
                           defaultValue={n.reminder_at ? n.reminder_at.slice(0, 16) : ""}
                           onChange={(e) => setReminderVal(e.target.value)}
-                          className="rounded border border-slate-200 px-2 py-0.5 text-xs outline-none focus:border-blue-500"
+                          className="rounded border border-slate-200 px-2 py-0.5 text-xs bg-white text-slate-900 outline-none focus:border-blue-500"
                           autoFocus
                         />
                         <button type="button" onClick={() => saveReminder(n.id)} className="text-xs font-medium text-blue-800">Save</button>

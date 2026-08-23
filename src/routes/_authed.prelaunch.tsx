@@ -146,7 +146,7 @@ function PreLaunch() {
                   if (e.key === "Enter") saveTotalTarget();
                   if (e.key === "Escape") setEditTarget(false);
                 }}
-                className="w-36 rounded-lg border border-blue-400 px-2 py-0.5 text-sm outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-36 rounded-lg border border-blue-400 px-2 py-0.5 text-sm bg-white text-slate-900 outline-none focus:ring-2 focus:ring-blue-500"
                 autoFocus
               />
               <button type="button" onClick={saveTotalTarget} className="font-medium text-blue-800 hover:text-blue-900">Save</button>
@@ -209,7 +209,7 @@ function PreLaunch() {
                     if (e.key === "Escape") setAddingCat(false);
                   }}
                   placeholder="Category name…"
-                  className="flex-1 rounded-lg border border-slate-200 px-3 py-1.5 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
+                  className="flex-1 rounded-lg border border-slate-200 px-3 py-1.5 text-sm bg-white text-slate-900 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
                   autoFocus
                 />
                 <button type="button" onClick={addCategory} className="text-xs font-medium text-blue-800">Add</button>
@@ -236,7 +236,7 @@ function PreLaunch() {
                               if (e.key === "Enter") saveCategoryName();
                               if (e.key === "Escape") setEditCat(null);
                             }}
-                            className="flex-1 rounded border border-blue-300 px-2 py-0.5 text-xs outline-none"
+                            className="flex-1 rounded border border-blue-300 px-2 py-0.5 text-xs bg-white text-slate-900 outline-none"
                             autoFocus
                           />
                           <button type="button" onClick={saveCategoryName} className="text-xs text-blue-800 font-medium">Save</button>
@@ -296,7 +296,7 @@ function PreLaunch() {
                     placeholder="0"
                     value={amount}
                     onChange={(e) => setAmount(e.target.value)}
-                    className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none focus:border-blue-800 focus:ring-2 focus:ring-blue-800/20"
+                    className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm bg-white text-slate-900 outline-none focus:border-blue-800 focus:ring-2 focus:ring-blue-800/20"
                   />
                 </div>
                 <div>
@@ -305,7 +305,7 @@ function PreLaunch() {
                     placeholder="What was it for?"
                     value={note}
                     onChange={(e) => setNote(e.target.value)}
-                    className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none focus:border-blue-800 focus:ring-2 focus:ring-blue-800/20"
+                    className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm bg-white text-slate-900 outline-none focus:border-blue-800 focus:ring-2 focus:ring-blue-800/20"
                   />
                 </div>
               </div>

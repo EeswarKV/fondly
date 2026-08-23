@@ -12,20 +12,21 @@ type Task = {
   status: "todo" | "inprogress" | "review" | "done";
   verified_by: string | null;
 };
+type Phase = { id: string; label: string; sort_order: number; tab: string };
 type TaskLog = { id: string; task_id: string; author_id: string | null; note: string; created_at: string };
 type Blocker = { id: string; title: string; note: string | null; raised_by: string | null; resolved: boolean };
 
 const fetchRoadmap = createServerFn({ method: "GET" }).handler(async () => {
   const supabase = getSupabaseServerClient();
   const [{ data: phases }, { data: tasks }, { data: logs }, { data: blockers }] = await Promise.all([
-    supabase.from("phases").select("id, label, sort_order").order("sort_order"),
+    supabase.from("phases").select("id, label, sort_order, tab").order("sort_order"),
     supabase.from("tasks").select("id, phase_id, title, assignee_id, status, verified_by"),
     supabase.from("task_logs").select("id, task_id, author_id, note, created_at").order("created_at"),
     supabase.from("blockers").select("id, title, note, raised_by, resolved")
       .eq("resolved", false).order("created_at", { ascending: false }),
   ]);
   return {
-    phases: phases ?? [],
+    phases: phases ?? [] as Phase[],
     tasks: (tasks ?? []) as Task[],
     logs: (logs ?? []) as TaskLog[],
     blockers: (blockers ?? []) as Blocker[],
@@ -111,7 +112,7 @@ function TaskRow({ task, founders, logs, onChanged }: {
             value={titleVal}
             onChange={(e) => setTitleVal(e.target.value)}
             onKeyDown={(e) => { if (e.key === "Enter") saveTitle(); if (e.key === "Escape") { setTitleVal(task.title); setEditTitle(false); } }}
-            className="flex-1 rounded border border-blue-300 px-2 py-0.5 text-sm outline-none focus:ring-2 focus:ring-blue-500"
+            className="flex-1 rounded border border-blue-300 px-2 py-0.5 text-sm bg-white text-slate-900 outline-none focus:ring-2 focus:ring-blue-500"
             autoFocus
           />
         ) : (
@@ -164,7 +165,7 @@ function TaskRow({ task, founders, logs, onChanged }: {
             <select
               value={task.assignee_id ?? ""}
               onChange={(e) => updateStatus({ assignee_id: e.target.value || null })}
-              className="rounded-lg border border-slate-200 px-2 py-1 text-xs outline-none focus:border-blue-500"
+              className="rounded-lg border border-slate-200 px-2 py-1 text-xs bg-white text-slate-900 outline-none focus:border-blue-500"
             >
               <option value="">Unassigned</option>
               {founders.map((f) => <option key={f.id} value={f.id}>{f.name}</option>)}
@@ -196,7 +197,7 @@ function TaskRow({ task, founders, logs, onChanged }: {
               onChange={(e) => setNoteText(e.target.value)}
               onKeyDown={(e) => { if (e.key === "Enter") addLog(); }}
               placeholder="Log what got done…"
-              className="flex-1 rounded-lg border border-slate-200 px-3 py-1.5 text-xs outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
+              className="flex-1 rounded-lg border border-slate-200 px-3 py-1.5 text-xs bg-white text-slate-900 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
             />
             <button
               type="button"
@@ -225,7 +226,7 @@ function TaskRow({ task, founders, logs, onChanged }: {
               <>
                 <span className="text-xs text-slate-500">Verify as</span>
                 <select value={verifier} onChange={(e) => setVerifier(e.target.value)}
-                  className="rounded-lg border border-slate-200 px-2 py-1.5 text-xs outline-none focus:border-blue-500">
+                  className="rounded-lg border border-slate-200 px-2 py-1.5 text-xs bg-white text-slate-900 outline-none focus:border-blue-500">
                   {otherFounders.map((f) => <option key={f.id} value={f.id}>{f.name}</option>)}
                 </select>
                 <button type="button" disabled={saving}
@@ -279,11 +280,11 @@ function AddTaskRow({ phaseId, founders, onDone }: {
           onChange={(e) => setTitle(e.target.value)}
           onKeyDown={(e) => { if (e.key === "Enter") create(); if (e.key === "Escape") onDone(); }}
           placeholder="Task title…"
-          className="flex-1 min-w-40 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
+          className="flex-1 min-w-40 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-sm bg-white text-slate-900 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
           autoFocus
         />
         <select value={assigneeId} onChange={(e) => setAssignee(e.target.value)}
-          className="rounded-lg border border-slate-200 bg-white px-2 py-1.5 text-xs outline-none focus:border-blue-500">
+          className="rounded-lg border border-slate-200 bg-white px-2 py-1.5 text-xs bg-white text-slate-900 outline-none focus:border-blue-500">
           <option value="">Unassigned</option>
           {founders.map((f) => <option key={f.id} value={f.id}>{f.name}</option>)}
         </select>
@@ -304,6 +305,9 @@ function Roadmap() {
   const router = useRouter();
 
   const [addingToPhase, setAddingToPhase] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState<'business' | 'chocolate'>('business');
+  const [addingPhase, setAddingPhase] = useState(false);
+  const [newPhaseLabel, setNewPhaseLabel] = useState('');
   const [bTitle, setBTitle] = useState("");
   const [bNote,  setBNote]  = useState("");
   const [bBy,    setBBy]    = useState(founders[0]?.id ?? "");
@@ -311,6 +315,21 @@ function Roadmap() {
 
   const done = tasks.filter((t) => t.status === "done").length;
   const pct  = tasks.length > 0 ? Math.round((done / tasks.length) * 100) : 0;
+
+  const visiblePhases = (phases as Phase[]).filter(p => (p.tab ?? 'business') === activeTab);
+
+  const createPhase = async () => {
+    if (!newPhaseLabel.trim()) return;
+    const supabase = getSupabaseBrowserClient();
+    const maxOrder = visiblePhases.reduce((max, p) => Math.max(max, p.sort_order), 0);
+    await supabase.from('phases').insert({
+      label: newPhaseLabel.trim(),
+      sort_order: maxOrder + 1,
+      tab: activeTab,
+    });
+    setNewPhaseLabel(''); setAddingPhase(false);
+    router.invalidate();
+  };
 
   const addBlocker = async () => {
     if (!bTitle.trim()) return;
@@ -341,6 +360,24 @@ function Roadmap() {
       </div>
 
       <div className="p-8 space-y-5">
+        {/* Tab switcher */}
+        <div className="flex items-center gap-1 rounded-xl border border-slate-200 bg-white p-1 w-fit">
+          {(['business', 'chocolate'] as const).map((t) => (
+            <button
+              key={t}
+              type="button"
+              onClick={() => { setActiveTab(t); setAddingToPhase(null); setAddingPhase(false); }}
+              className={`rounded-lg px-5 py-2 text-sm font-medium transition-colors ${
+                activeTab === t
+                  ? 'bg-blue-800 text-white shadow-sm'
+                  : 'text-slate-600 hover:text-slate-900'
+              }`}
+            >
+              {t === 'business' ? '🏢 Business' : '🍫 Chocolate making'}
+            </button>
+          ))}
+        </div>
+
         {/* Overall progress */}
         <div className="rounded-xl border border-slate-200 bg-white p-6">
           <div className="mb-3 flex items-center justify-between">
@@ -352,8 +389,8 @@ function Roadmap() {
           </div>
         </div>
 
-        {/* Phases */}
-        {phases.map((phase) => {
+        {/* Phases for active tab */}
+        {visiblePhases.map((phase) => {
           const phaseTasks = tasks.filter((t) => t.phase_id === phase.id);
           const pDone = phaseTasks.filter((t) => t.status === "done").length;
           const isAdding = addingToPhase === phase.id;
@@ -399,6 +436,30 @@ function Roadmap() {
           );
         })}
 
+        {/* Add phase for this tab */}
+        {addingPhase ? (
+          <div className="flex items-center gap-2">
+            <input
+              value={newPhaseLabel}
+              onChange={(e) => setNewPhaseLabel(e.target.value)}
+              onKeyDown={(e) => { if (e.key === 'Enter') createPhase(); if (e.key === 'Escape') setAddingPhase(false); }}
+              placeholder={`Phase name for ${activeTab === 'business' ? 'Business' : 'Chocolate making'}…`}
+              className="flex-1 rounded-lg border border-slate-200 bg-white text-slate-900 px-3 py-2 text-sm bg-white text-slate-900 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
+              autoFocus
+            />
+            <button type="button" onClick={createPhase} className="rounded-lg bg-blue-800 px-3 py-2 text-sm font-medium text-white hover:bg-blue-900">Add phase</button>
+            <button type="button" onClick={() => setAddingPhase(false)} className="text-sm text-slate-400">Cancel</button>
+          </div>
+        ) : (
+          <button
+            type="button"
+            onClick={() => setAddingPhase(true)}
+            className="text-xs font-medium text-slate-400 hover:text-blue-800 transition-colors"
+          >
+            + Add phase to {activeTab === 'business' ? 'Business' : 'Chocolate making'}
+          </button>
+        )}
+
         {/* Blockers */}
         <div className="rounded-xl border border-slate-200 bg-white p-6">
           <h2 className="mb-4 text-sm font-semibold text-slate-900">Blockers</h2>
@@ -433,16 +494,16 @@ function Roadmap() {
               value={bTitle}
               onChange={(e) => setBTitle(e.target.value)}
               placeholder="What's blocking things?"
-              className="min-w-48 flex-1 rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
+              className="min-w-48 flex-1 rounded-lg border border-slate-200 px-3 py-2 text-sm bg-white text-slate-900 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
             />
             <input
               value={bNote}
               onChange={(e) => setBNote(e.target.value)}
               placeholder="Details (optional)"
-              className="min-w-36 flex-1 rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
+              className="min-w-36 flex-1 rounded-lg border border-slate-200 px-3 py-2 text-sm bg-white text-slate-900 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
             />
             <select value={bBy} onChange={(e) => setBBy(e.target.value)}
-              className="rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none focus:border-blue-500">
+              className="rounded-lg border border-slate-200 px-3 py-2 text-sm bg-white text-slate-900 outline-none focus:border-blue-500">
               {founders.map((f) => <option key={f.id} value={f.id}>{f.name}</option>)}
             </select>
             <button type="button" onClick={addBlocker} disabled={!bTitle.trim()}
