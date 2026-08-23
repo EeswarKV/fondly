@@ -5,21 +5,13 @@ import { tanstackStart } from '@tanstack/react-start/plugin/vite'
 
 import viteReact from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
-import { nitro } from 'nitro/vite'
-
-const isVercel = !!process.env.VERCEL
 
 const config = defineConfig({
   resolve: { tsconfigPaths: true },
   plugins: [
-    !isVercel && devtools(),
-    nitro({ rollupConfig: { external: [/^@sentry\//] } }),
+    process.env.NODE_ENV !== 'production' && devtools(),
     tailwindcss(),
-    tanstackStart({
-      server: {
-        preset: isVercel ? 'vercel' : undefined,
-      },
-    }),
+    tanstackStart(),
     viteReact(),
   ],
 })
