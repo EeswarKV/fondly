@@ -1,4 +1,5 @@
-import { Link, Outlet, createFileRoute, redirect, useEffect, useRouter } from "@tanstack/react-router";
+import { Link, Outlet, createFileRoute, redirect, useRouter } from "@tanstack/react-router";
+import { useEffect } from "react";
 import { Avatar } from "#/components/ui";
 import { fetchSession } from "#/utils/founders";
 
