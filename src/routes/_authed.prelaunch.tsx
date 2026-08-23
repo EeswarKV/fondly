@@ -24,7 +24,18 @@ const fetchPrelaunch = createServerFn({ method: "GET" }).handler(async () => {
 
 export const Route = createFileRoute("/_authed/prelaunch")({
   staleTime: Infinity,
-  loader: () => fetchPrelaunch(),
+  loader: async () => {
+    if (typeof window !== 'undefined') {
+      const { getSupabaseBrowserClient } = await import("#/utils/supabase/client");
+      const supabase = getSupabaseBrowserClient();
+      const [{ data: categories }, { data: expenses }] = await Promise.all([
+        supabase.from("prelaunch_categories").select("id, name, budget").order("name"),
+        supabase.from("prelaunch_expenses").select("id, category_id, note, amount, created_at").order("created_at", { ascending: false }),
+      ]);
+      return { categories: (categories ?? []) as Category[], expenses: (expenses ?? []) as Expense[] };
+    }
+    return fetchPrelaunch();
+  },
   component: PreLaunch,
 });
 

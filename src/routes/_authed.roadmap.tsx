@@ -35,7 +35,20 @@ const fetchRoadmap = createServerFn({ method: "GET" }).handler(async () => {
 
 export const Route = createFileRoute("/_authed/roadmap")({
   staleTime: Infinity,
-  loader: () => fetchRoadmap(),
+  loader: async () => {
+    if (typeof window !== 'undefined') {
+      const { getSupabaseBrowserClient } = await import("#/utils/supabase/client");
+      const supabase = getSupabaseBrowserClient();
+      const [{ data: phases }, { data: tasks }, { data: logs }, { data: blockers }] = await Promise.all([
+        supabase.from("phases").select("id, label, sort_order, tab").order("sort_order"),
+        supabase.from("tasks").select("id, phase_id, title, assignee_id, status, verified_by"),
+        supabase.from("task_logs").select("id, task_id, author_id, note, created_at").order("created_at"),
+        supabase.from("blockers").select("id, title, note, raised_by, resolved").eq("resolved", false).order("created_at", { ascending: false }),
+      ]);
+      return { phases: (phases ?? []) as Phase[], tasks: (tasks ?? []) as Task[], logs: (logs ?? []) as TaskLog[], blockers: (blockers ?? []) as Blocker[] };
+    }
+    return fetchRoadmap();
+  },
   component: Roadmap,
 });
 

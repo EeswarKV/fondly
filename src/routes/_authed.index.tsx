@@ -23,7 +23,25 @@ const fetchDashboard = createServerFn({ method: "GET" }).handler(async () => {
 });
 
 export const Route = createFileRoute("/_authed/")({ staleTime: Infinity,
-  loader: () => fetchDashboard(),
+  loader: async () => {
+    if (typeof window !== 'undefined') {
+      const { getSupabaseBrowserClient } = await import("#/utils/supabase/client");
+      const supabase = getSupabaseBrowserClient();
+      const [{ data: tasks }, { data: categories }, { data: expenses }, { data: blockers }] = await Promise.all([
+        supabase.from("tasks").select("status"),
+        supabase.from("prelaunch_categories").select("budget"),
+        supabase.from("prelaunch_expenses").select("amount, note, created_at").order("created_at", { ascending: false }).limit(5),
+        supabase.from("blockers").select("id, title").eq("resolved", false),
+      ]);
+      const totalTasks = tasks?.length ?? 0;
+      const doneTasks = tasks?.filter((t) => t.status === "done").length ?? 0;
+      const completion = totalTasks > 0 ? Math.round((doneTasks / totalTasks) * 100) : 0;
+      const totalBudget = (categories ?? []).reduce((s, c) => s + Number(c.budget), 0);
+      const totalSpent = (expenses ?? []).reduce((s, e) => s + Number(e.amount), 0);
+      return { completion, totalTasks, doneTasks, totalBudget, totalSpent, recentExpenses: expenses ?? [], openBlockers: blockers ?? [] };
+    }
+    return fetchDashboard();
+  },
   component: Dashboard,
 });
 

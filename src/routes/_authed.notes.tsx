@@ -14,7 +14,16 @@ const fetchNotes = createServerFn({ method: "GET" }).handler(async () => {
 
 export const Route = createFileRoute("/_authed/notes")({
   staleTime: Infinity,
-  loader: () => fetchNotes(),
+  loader: async () => {
+    // Client-side navigation: browser → Supabase directly (no serverless cold start)
+    if (typeof window !== 'undefined') {
+      const { getSupabaseBrowserClient } = await import("#/utils/supabase/client");
+      const { data } = await getSupabaseBrowserClient().from("notes")
+        .select("id, text, reminder_at, done").order("created_at", { ascending: false });
+      return (data ?? []) as Note[];
+    }
+    return fetchNotes(); // SSR: runs directly on server, no HTTP hop
+  },
   component: Notes,
 });
 
