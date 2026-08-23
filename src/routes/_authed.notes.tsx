@@ -13,6 +13,10 @@ const fetchNotes = createServerFn({ method: "GET" }).handler(async () => {
 });
 
 export const Route = createFileRoute("/_authed/notes")({
+  staleTime: 30_000,
+  loader: () => fetchNotes(),
+  component: Notes,
+});
   loader: () => fetchNotes(),
   component: Notes,
 });
@@ -32,6 +36,8 @@ function Notes() {
   const [reminder, setReminder] = useState("");
   const [saving, setSaving] = useState(false);
   const [err, setErr] = useState<string | null>(null);
+  const [editReminderFor, setEditReminderFor] = useState<string | null>(null);
+  const [reminderVal, setReminderVal] = useState("");
 
   const now = new Date();
   const sorted = [...notes].sort((a, b) => {
@@ -66,6 +72,15 @@ function Notes() {
   const remove = async (n: Note) => {
     const supabase = getSupabaseBrowserClient();
     await supabase.from("notes").delete().eq("id", n.id);
+    router.invalidate();
+  };
+
+  const saveReminder = async (noteId: string) => {
+    const supabase = getSupabaseBrowserClient();
+    await supabase.from("notes")
+      .update({ reminder_at: reminderVal ? new Date(reminderVal).toISOString() : null })
+      .eq("id", noteId);
+    setEditReminderFor(null);
     router.invalidate();
   };
 
@@ -104,7 +119,7 @@ function Notes() {
               type="button"
               onClick={addNote}
               disabled={saving || !text.trim()}
-              className="ml-auto rounded-lg bg-blue-600 px-4 py-1.5 text-xs font-medium text-white transition-colors hover:bg-blue-700 disabled:bg-blue-300"
+              className="ml-auto rounded-lg bg-blue-800 px-4 py-1.5 text-xs font-medium text-white transition-colors hover:bg-blue-900 disabled:bg-blue-300"
             >
               {saving ? "Adding…" : "Add note"}
             </button>
@@ -141,10 +156,34 @@ function Notes() {
                     <p className={`text-sm text-slate-900 ${n.done ? "line-through text-slate-400" : ""}`}>
                       {n.text}
                     </p>
-                    {n.reminder_at && (
-                      <p className={`mt-1 text-xs ${overdue ? "text-red-500" : "text-slate-400"}`}>
-                        ⏰ {overdue ? "Overdue — " : ""}{fmtReminder(n.reminder_at)}
-                      </p>
+                    {editReminderFor === n.id ? (
+                      <div className="mt-1.5 flex items-center gap-2">
+                        <input
+                          type="datetime-local"
+                          defaultValue={n.reminder_at ? n.reminder_at.slice(0, 16) : ""}
+                          onChange={(e) => setReminderVal(e.target.value)}
+                          className="rounded border border-slate-200 px-2 py-0.5 text-xs outline-none focus:border-blue-500"
+                          autoFocus
+                        />
+                        <button type="button" onClick={() => saveReminder(n.id)} className="text-xs font-medium text-blue-800">Save</button>
+                        <button type="button" onClick={() => setEditReminderFor(null)} className="text-xs text-slate-400">Cancel</button>
+                      </div>
+                    ) : (
+                      <div className="mt-1 flex items-center gap-2">
+                        {n.reminder_at && (
+                          <p className={`text-xs ${overdue ? "text-red-500" : "text-slate-400"}`}>
+                            ⏰ {overdue ? "Overdue — " : ""}{fmtReminder(n.reminder_at)}
+                          </p>
+                        )}
+                        <button
+                          type="button"
+                          onClick={() => { setEditReminderFor(n.id); setReminderVal(n.reminder_at?.slice(0, 16) ?? ""); }}
+                          className="text-[10px] text-slate-300 hover:text-blue-700 transition-colors"
+                          title="Set/edit reminder"
+                        >
+                          {n.reminder_at ? "edit reminder" : "⏰ add reminder"}
+                        </button>
+                      </div>
                     )}
                   </div>
                   <button

@@ -32,7 +32,7 @@ function LoginPage() {
             ◆
           </div>
           <div className="text-center">
-            <h1 className="text-xl font-semibold text-slate-900">Chocolatehouse HQ</h1>
+            <h1 className="text-xl font-semibold text-slate-900">Fondly</h1>
             <p className="text-sm text-slate-500 mt-1">Sign in to your founder dashboard</p>
           </div>
         </div>
@@ -71,7 +71,7 @@ function LoginPage() {
             <button
               type="submit"
               disabled={loading}
-              className="mt-1 w-full rounded-lg bg-blue-600 py-2.5 text-sm font-medium text-white transition-colors hover:bg-blue-700 disabled:bg-blue-400"
+              className="mt-1 w-full rounded-lg bg-blue-800 py-2.5 text-sm font-medium text-white transition-colors hover:bg-blue-900 disabled:bg-blue-400"
             >
               {loading ? "Signing in…" : "Sign in"}
             </button>

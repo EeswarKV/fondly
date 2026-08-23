@@ -38,7 +38,7 @@ function AuthedLayout() {
           <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-blue-600 text-sm font-bold text-white select-none">
             ◆
           </div>
-          <span className="text-sm font-semibold text-slate-800">Chocolatehouse</span>
+          <span className="text-sm font-semibold text-slate-800">Fondly</span>
         </div>
 
         {/* Nav */}
@@ -54,7 +54,7 @@ function AuthedLayout() {
                 <div
                   className={`flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm transition-colors cursor-pointer ${
                     isActive
-                      ? "bg-blue-50 text-blue-700 font-medium"
+                      ? "bg-blue-50 text-blue-900 font-medium"
                       : "text-slate-600 hover:bg-slate-50 hover:text-slate-800"
                   }`}
                 >

@@ -169,6 +169,10 @@ begin
       'create policy "founders can update %I" on %I for update using (auth.uid() is not null);',
       t, t
     );
+    execute format(
+      'create policy "founders can delete %I" on %I for delete using (auth.uid() is not null);',
+      t, t
+    );
   end loop;
 end $$;
 

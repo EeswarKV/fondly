@@ -22,7 +22,7 @@ const fetchDashboard = createServerFn({ method: "GET" }).handler(async () => {
   return { completion, totalTasks, doneTasks, totalBudget, totalSpent, recentExpenses: expenses ?? [], openBlockers: blockers ?? [] };
 });
 
-export const Route = createFileRoute("/_authed/")({
+export const Route = createFileRoute("/_authed/")({ staleTime: 30_000,
   loader: () => fetchDashboard(),
   component: Dashboard,
 });
@@ -48,7 +48,7 @@ function Dashboard() {
             <p className="text-xs font-medium uppercase tracking-wide text-slate-500">Roadmap progress</p>
             <p className="mt-2 text-2xl font-bold text-slate-900">{completion}%</p>
             <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-slate-100">
-              <div className="h-1.5 rounded-full bg-blue-600 transition-all" style={{ width: `${completion}%` }} />
+            <div className="h-1.5 rounded-full bg-blue-800 transition-all" style={{ width: `${completion}%` }} />
             </div>
           </div>
           <div className="rounded-xl border border-slate-200 bg-white p-5">
@@ -83,7 +83,7 @@ function Dashboard() {
           </div>
           <div className="h-2 overflow-hidden rounded-full bg-slate-100">
             <div
-              className={`h-2 rounded-full transition-all ${spentPct > 90 ? "bg-red-500" : "bg-blue-600"}`}
+              className={`h-2 rounded-full transition-all ${spentPct > 90 ? "bg-red-500" : "bg-blue-800"}`}
               style={{ width: `${Math.min(100, spentPct)}%` }}
             />
           </div>
