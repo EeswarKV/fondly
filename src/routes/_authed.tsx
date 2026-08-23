@@ -43,11 +43,11 @@ function AuthedLayout() {
 
   return (
     <div className="flex h-screen overflow-hidden bg-slate-50">
-      {/* Sidebar */}
-      <aside className="flex w-56 shrink-0 flex-col bg-white border-r border-slate-200">
+      {/* Sidebar — hidden on mobile, visible on lg+ */}
+      <aside className="hidden lg:flex w-56 shrink-0 flex-col bg-white border-r border-slate-200">
         {/* Logo */}
         <div className="flex items-center gap-2.5 border-b border-slate-100 px-4 py-[18px]">
-          <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-blue-600 text-sm font-bold text-white select-none">
+          <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-blue-800 text-sm font-bold text-white select-none">
             ◆
           </div>
           <span className="text-sm font-semibold text-slate-800">Fondly</span>
@@ -101,10 +101,46 @@ function AuthedLayout() {
         </div>
       </aside>
 
-      {/* Main content */}
-      <main className="flex-1 overflow-y-auto">
+      {/* Main content — extra bottom padding on mobile for the bottom nav */}
+      <main className="flex-1 overflow-y-auto pb-16 lg:pb-0">
         <Outlet />
       </main>
+
+      {/* Bottom navigation — mobile only (hidden on lg+) */}
+      <nav className="fixed bottom-0 left-0 right-0 z-50 flex lg:hidden border-t border-slate-200 bg-white">
+        {NAV.map((n) => (
+          <Link
+            key={n.to}
+            to={n.to}
+            activeOptions={{ exact: n.to === "/" }}
+            className="flex-1"
+            style={{ textDecoration: "none" }}
+          >
+            {({ isActive }: { isActive: boolean }) => (
+              <div
+                className={`flex flex-col items-center gap-1 py-2.5 text-[10px] font-medium transition-colors ${
+                  isActive ? "text-blue-800" : "text-slate-500"
+                }`}
+              >
+                <span className="text-xl leading-none">{n.icon}</span>
+                {n.label}
+              </div>
+            )}
+          </Link>
+        ))}
+        <button
+          type="button"
+          onClick={async () => {
+            const { getSupabaseBrowserClient } = await import("#/utils/supabase/client");
+            await getSupabaseBrowserClient().auth.signOut();
+            router.navigate({ to: "/login" });
+          }}
+          className="flex flex-1 flex-col items-center gap-1 py-2.5 text-[10px] font-medium text-slate-500"
+        >
+          <span className="text-xl leading-none">⏻</span>
+          Sign out
+        </button>
+      </nav>
     </div>
   );
 }

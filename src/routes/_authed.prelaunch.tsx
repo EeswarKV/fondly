@@ -142,7 +142,7 @@ function PreLaunch() {
   return (
     <div className="min-h-full">
       {/* Header */}
-      <div className="border-b border-slate-200 bg-white px-8 py-6">
+      <div className="border-b border-slate-200 bg-white px-4 py-4 lg:px-8 lg:py-6">
         <h1 className="text-xl font-semibold text-slate-900">Pre-launch spending</h1>
         <div className="mt-1 flex items-center gap-2 text-sm">
           <span className="text-slate-500">Total target:</span>
@@ -176,7 +176,7 @@ function PreLaunch() {
         </div>
       </div>
 
-      <div className="p-8 space-y-5">
+      <div className="p-4 lg:p-8 space-y-5">
         {/* Progress bar */}
         <div className="rounded-xl border border-slate-200 bg-white p-6">
           <div className="mb-3 flex items-center justify-between">
@@ -196,7 +196,7 @@ function PreLaunch() {
           </div>
         </div>
 
-        <div className="grid grid-cols-2 gap-5">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
           {/* Category list */}
           <div className="rounded-xl border border-slate-200 bg-white p-6">
             <div className="mb-4 flex items-center justify-between">

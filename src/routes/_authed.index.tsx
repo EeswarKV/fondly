@@ -52,16 +52,16 @@ function Dashboard() {
   return (
     <div className="min-h-full">
       {/* Page header */}
-      <div className="border-b border-slate-200 bg-white px-8 py-6">
+      <div className="border-b border-slate-200 bg-white px-4 py-4 lg:px-8 lg:py-6">
         <h1 className="text-xl font-semibold text-slate-900">Dashboard</h1>
         <p className="mt-0.5 text-sm text-slate-500">
           {completion}% of the way to launch · {doneTasks} of {totalTasks} tasks verified
         </p>
       </div>
 
-      <div className="p-8 space-y-5">
+      <div className="p-4 lg:p-8 space-y-5">
         {/* Stat cards */}
-        <div className="grid grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           <div className="rounded-xl border border-slate-200 bg-white p-5">
             <p className="text-xs font-medium uppercase tracking-wide text-slate-500">Roadmap progress</p>
             <p className="mt-2 text-2xl font-bold text-slate-900">{completion}%</p>

@@ -365,16 +365,16 @@ function Roadmap() {
 
   return (
     <div className="min-h-full">
-      <div className="border-b border-slate-200 bg-white px-8 py-6">
+      <div className="border-b border-slate-200 bg-white px-4 py-4 lg:px-8 lg:py-6">
         <h1 className="text-xl font-semibold text-slate-900">Roadmap to launch</h1>
         <p className="mt-0.5 text-sm text-slate-500">
           A task counts as done only once another founder verifies it. Double-click a title to rename it.
         </p>
       </div>
 
-      <div className="p-8 space-y-5">
+      <div className="p-4 lg:p-8 space-y-5">
         {/* Tab switcher */}
-        <div className="flex items-center gap-1 rounded-xl border border-slate-200 bg-white p-1 w-fit">
+        <div className="flex items-center gap-1 overflow-x-auto rounded-xl border border-slate-200 bg-white p-1 w-fit max-w-full">
           {(['business', 'chocolate'] as const).map((t) => (
             <button
               key={t}

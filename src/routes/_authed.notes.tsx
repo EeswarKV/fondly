@@ -93,14 +93,14 @@ function Notes() {
   return (
     <div className="min-h-full">
       {/* Page header */}
-      <div className="border-b border-slate-200 bg-white px-8 py-6">
+      <div className="border-b border-slate-200 bg-white px-4 py-4 lg:px-8 lg:py-6">
         <h1 className="text-xl font-semibold text-slate-900">My Notes</h1>
         <p className="mt-0.5 text-sm text-slate-500">
           Private to you — only your account can read these, enforced by the database.
         </p>
       </div>
 
-      <div className="p-8 max-w-2xl space-y-4">
+      <div className="p-4 lg:p-8 max-w-2xl space-y-4">
         {/* Add note card */}
         <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
           <textarea
