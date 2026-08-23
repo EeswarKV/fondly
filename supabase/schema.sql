@@ -190,12 +190,20 @@ create policy "owner can delete own notes" on notes
 -- ─────────────────────────────────────────────
 -- Seed data: the five roadmap phases from the plan
 -- ─────────────────────────────────────────────
-insert into phases (label, sort_order) values
-  ('Now – Sep 2026', 1),
-  ('Oct – Dec 2026', 2),
-  ('Dec 2026 – Feb 2027', 3),
-  ('Mar – Apr 2027', 4),
-  ('May 2027 – Launch', 5)
+insert into phases (label, sort_order, tab) values
+  ('Now – Sep 2026', 1, 'business'),
+  ('Oct – Dec 2026', 2, 'business'),
+  ('Dec 2026 – Feb 2027', 3, 'business'),
+  ('Mar – Apr 2027', 4, 'business'),
+  ('May 2027 – Launch', 5, 'business')
+on conflict do nothing;
+
+insert into phases (label, sort_order, tab) values
+  ('Now – Sep 2026', 1, 'chocolate'),
+  ('Oct – Dec 2026', 2, 'chocolate'),
+  ('Dec 2026 – Feb 2027', 3, 'chocolate'),
+  ('Mar – Apr 2027', 4, 'chocolate'),
+  ('May 2027 – Launch', 5, 'chocolate')
 on conflict do nothing;
 
 insert into prelaunch_categories (name, budget) values
