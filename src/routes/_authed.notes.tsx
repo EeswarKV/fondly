@@ -17,9 +17,6 @@ export const Route = createFileRoute("/_authed/notes")({
   loader: () => fetchNotes(),
   component: Notes,
 });
-  loader: () => fetchNotes(),
-  component: Notes,
-});
 
 function fmtReminder(iso: string) {
   const d = new Date(iso);

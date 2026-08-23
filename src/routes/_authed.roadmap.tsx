@@ -58,7 +58,7 @@ function TaskRow({ task, founders, logs, onChanged }: {
   const [editTitle, setEditTitle] = useState(false);
   const [titleVal, setTitleVal]  = useState(task.title);
 
-  const otherFounders = founders.filter((f) => f.id \!== task.assignee_id);
+  const otherFounders = founders.filter((f) => f.id !== task.assignee_id);
   const [verifier, setVerifier] = useState(otherFounders[0]?.id ?? "");
   const meta = STATUS[task.status];
   const assignee = findFounder(founders, task.assignee_id);
@@ -74,7 +74,7 @@ function TaskRow({ task, founders, logs, onChanged }: {
   };
 
   const saveTitle = async () => {
-    if (\!titleVal.trim() || titleVal === task.title) { setEditTitle(false); return; }
+    if (!titleVal.trim() || titleVal === task.title) { setEditTitle(false); return; }
     const supabase = getSupabaseBrowserClient();
     await supabase.from("tasks").update({ title: titleVal.trim() }).eq("id", task.id);
     setEditTitle(false);
@@ -82,7 +82,7 @@ function TaskRow({ task, founders, logs, onChanged }: {
   };
 
   const addLog = async () => {
-    if (\!noteText.trim()) return;
+    if (!noteText.trim()) return;
     const supabase = getSupabaseBrowserClient();
     await supabase.from("task_logs").insert({
       task_id: task.id,
@@ -94,7 +94,7 @@ function TaskRow({ task, founders, logs, onChanged }: {
   };
 
   const deleteTask = async () => {
-    if (\!confirm(`Delete "${task.title}"?`)) return;
+    if (!confirm(`Delete "${task.title}"?`)) return;
     const supabase = getSupabaseBrowserClient();
     const { error } = await supabase.from("tasks").delete().eq("id", task.id);
     if (error) { alert(error.message); return; }
@@ -118,7 +118,7 @@ function TaskRow({ task, founders, logs, onChanged }: {
           <button
             type="button"
             onDoubleClick={() => setEditTitle(true)}
-            onClick={() => setOpen(\!open)}
+            onClick={() => setOpen(!open)}
             className={`flex-1 text-left text-sm text-slate-900 ${task.status === "done" ? "line-through text-slate-400" : ""}`}
             title="Click to expand · Double-click to rename"
           >
@@ -146,7 +146,7 @@ function TaskRow({ task, founders, logs, onChanged }: {
               </button>
               <button
                 type="button"
-                onClick={() => setOpen(\!open)}
+                onClick={() => setOpen(!open)}
                 className="text-slate-300 text-xs"
               >
                 {open ? "▲" : "▼"}
@@ -257,7 +257,7 @@ function AddTaskRow({ phaseId, founders, onDone }: {
   const [err,        setErr]      = useState<string | null>(null);
 
   const create = async () => {
-    if (\!title.trim()) return;
+    if (!title.trim()) return;
     setSaving(true); setErr(null);
     const supabase = getSupabaseBrowserClient();
     const { error } = await supabase.from("tasks").insert({
@@ -287,7 +287,7 @@ function AddTaskRow({ phaseId, founders, onDone }: {
           <option value="">Unassigned</option>
           {founders.map((f) => <option key={f.id} value={f.id}>{f.name}</option>)}
         </select>
-        <button type="button" onClick={create} disabled={saving || \!title.trim()}
+        <button type="button" onClick={create} disabled={saving || !title.trim()}
           className="rounded-lg bg-blue-800 px-3 py-1.5 text-xs font-medium text-white hover:bg-blue-900 disabled:bg-blue-300">
           {saving ? "Adding…" : "Add task"}
         </button>
@@ -313,7 +313,7 @@ function Roadmap() {
   const pct  = tasks.length > 0 ? Math.round((done / tasks.length) * 100) : 0;
 
   const addBlocker = async () => {
-    if (\!bTitle.trim()) return;
+    if (!bTitle.trim()) return;
     const supabase = getSupabaseBrowserClient();
     const { error } = await supabase.from("blockers").insert({
       title: bTitle.trim(),
@@ -363,7 +363,7 @@ function Roadmap() {
                 <h2 className="text-sm font-semibold text-slate-800">{phase.label}</h2>
                 <div className="flex items-center gap-3">
                   <span className="text-xs text-slate-400">{pDone}/{phaseTasks.length} done</span>
-                  {\!isAdding && (
+                  {!isAdding && (
                     <button
                       type="button"
                       onClick={() => setAddingToPhase(phase.id)}
@@ -384,7 +384,7 @@ function Roadmap() {
                     onChanged={() => router.invalidate()}
                   />
                 ))}
-                {phaseTasks.length === 0 && \!isAdding && (
+                {phaseTasks.length === 0 && !isAdding && (
                   <p className="text-xs italic text-slate-400">No tasks yet.</p>
                 )}
                 {isAdding && (
@@ -445,7 +445,7 @@ function Roadmap() {
               className="rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none focus:border-blue-500">
               {founders.map((f) => <option key={f.id} value={f.id}>{f.name}</option>)}
             </select>
-            <button type="button" onClick={addBlocker} disabled={\!bTitle.trim()}
+            <button type="button" onClick={addBlocker} disabled={!bTitle.trim()}
               className="rounded-lg border border-red-200 bg-red-50 px-4 py-2 text-sm font-medium text-red-700 hover:bg-red-100 disabled:opacity-50">
               Add blocker
             </button>

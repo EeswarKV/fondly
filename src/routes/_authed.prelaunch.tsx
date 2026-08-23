@@ -74,7 +74,7 @@ function PreLaunch() {
   const [catErr, setCatErr] = useState<string | null>(null);
 
   const saveCategoryName = async () => {
-    if (\!editCat?.name.trim()) return;
+    if (!editCat?.name.trim()) return;
     const supabase = getSupabaseBrowserClient();
     await supabase.from("prelaunch_categories").update({ name: editCat.name.trim() }).eq("id", editCat.id);
     setEditCat(null);
@@ -82,7 +82,7 @@ function PreLaunch() {
   };
 
   const addCategory = async () => {
-    if (\!newCatName.trim()) return;
+    if (!newCatName.trim()) return;
     const supabase = getSupabaseBrowserClient();
     const { error } = await supabase
       .from("prelaunch_categories")
@@ -93,7 +93,7 @@ function PreLaunch() {
   };
 
   const deleteCategory = async (id: string) => {
-    if (\!confirm("Delete this category and all its logged expenses?")) return;
+    if (!confirm("Delete this category and all its logged expenses?")) return;
     const supabase = getSupabaseBrowserClient();
     const { error: expErr } = await supabase.from("prelaunch_expenses").delete().eq("category_id", id);
     if (expErr) { setCatErr(expErr.message); return; }
@@ -113,7 +113,7 @@ function PreLaunch() {
     expenses.filter((e) => e.category_id === catId).reduce((s, e) => s + Number(e.amount), 0);
 
   const addExpense = async () => {
-    if (\!amount || \!note || \!categoryId) return;
+    if (!amount || !note || !categoryId) return;
     setSaving(true); setExpErr(null);
     const supabase = getSupabaseBrowserClient();
     const { error } = await supabase.from("prelaunch_expenses").insert({
@@ -312,7 +312,7 @@ function PreLaunch() {
               <button
                 type="button"
                 onClick={addExpense}
-                disabled={saving || \!amount || \!note}
+                disabled={saving || !amount || !note}
                 className="w-full rounded-lg bg-blue-800 py-2 text-sm font-medium text-white transition-colors hover:bg-blue-900 disabled:bg-blue-300"
               >
                 {saving ? "Saving…" : "Add to log"}
