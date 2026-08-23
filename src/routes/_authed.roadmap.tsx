@@ -216,7 +216,7 @@ function Roadmap() {
         <div className="rounded-xl border border-slate-200 bg-white p-6">
           <div className="mb-3 flex items-center justify-between">
             <p className="text-sm font-semibold text-slate-900">{done} of {tasks.length} tasks complete</p>
-            <span className="text-sm font-semibold text-blue-600">{pct}%</span>
+            <span className="text-sm font-semibold text-slate-900">{pct}%</span>
           </div>
           <div className="h-2.5 overflow-hidden rounded-full bg-slate-100">
             <div className="h-2.5 rounded-full bg-blue-600 transition-all" style={{ width: `${pct}%` }} />

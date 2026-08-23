@@ -1,16 +1,19 @@
 import { Link, Outlet, createFileRoute, redirect, useRouter } from "@tanstack/react-router";
 import { Avatar } from "#/components/ui";
-import { fetchCurrentUser, fetchFounders } from "#/utils/founders";
+import { fetchCurrentUser, fetchFounders, ensureFounder } from "#/utils/founders";
 
 export const Route = createFileRoute("/_authed")({
+  // beforeLoad context is inherited by ALL child routes via useRouteContext().
+  // Putting founders here (not in loader) is what makes them available on the
+  // roadmap, notes, and other child pages that call Route.useRouteContext().
   beforeLoad: async () => {
     const user = await fetchCurrentUser();
     if (!user) throw redirect({ to: "/login" });
-    return { user };
-  },
-  loader: async ({ context }) => {
+    // Auto-create a founders row for this auth user if missing — prevents FK
+    // violations on notes.owner_id and prelaunch_expenses.logged_by.
+    await ensureFounder();
     const founders = await fetchFounders();
-    return { user: context.user, founders };
+    return { user, founders };
   },
   component: AuthedLayout,
 });
@@ -23,7 +26,7 @@ const NAV = [
 ] as const;
 
 function AuthedLayout() {
-  const { user, founders } = Route.useLoaderData();
+  const { user, founders } = Route.useRouteContext();
   const router = useRouter();
 
   return (

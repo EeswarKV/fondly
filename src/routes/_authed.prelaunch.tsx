@@ -29,6 +29,19 @@ function PreLaunch() {
   const [categoryId, setCategoryId] = useState(categories[0]?.id ?? "");
   const [saving, setSaving] = useState(false);
   const [err, setErr] = useState<string | null>(null);
+  const [editBudget, setEditBudget] = useState<{ id: string; val: string } | null>(null);
+
+  const saveBudget = async () => {
+    if (!editBudget) return;
+    const supabase = getSupabaseBrowserClient();
+    const { error } = await supabase
+      .from("prelaunch_categories")
+      .update({ budget: Number(editBudget.val) })
+      .eq("id", editBudget.id);
+    if (error) { setErr(error.message); return; }
+    setEditBudget(null);
+    router.invalidate();
+  };
 
   const spentByCategory = (catId: string) =>
     expenses.filter((e) => e.category_id === catId).reduce((s, e) => s + Number(e.amount), 0);
@@ -45,7 +58,7 @@ function PreLaunch() {
       category_id: categoryId,
       note,
       amount: Number(amount),
-      logged_by: user.id,
+      logged_by: null, // nullable — avoids FK violation if founder row not yet set up
     });
     setSaving(false);
     if (error) { setErr(error.message); return; }
@@ -90,12 +103,38 @@ function PreLaunch() {
             <div className="space-y-4">
               {categories.map((c) => {
                 const spent = spentByCategory(c.id);
-                const p = Math.min(100, Math.round((spent / Number(c.budget)) * 100));
+                const budget = Number(c.budget);
+                const p = budget > 0 ? Math.min(100, Math.round((spent / budget) * 100)) : 0;
+                const isEditing = editBudget?.id === c.id;
                 return (
                   <div key={c.id}>
-                    <div className="mb-1.5 flex items-center justify-between">
-                      <span className="text-xs text-slate-700">{c.name}</span>
-                      <span className="text-xs text-slate-500">{inr(spent)} / {inr(Number(c.budget))}</span>
+                    <div className="mb-1.5 flex items-center justify-between gap-2">
+                      <span className="text-xs text-slate-700 truncate">{c.name}</span>
+                      <div className="flex shrink-0 items-center gap-1">
+                        <span className="text-xs text-slate-500">{inr(spent)} /</span>
+                        {isEditing ? (
+                          <>
+                            <input
+                              type="number"
+                              value={editBudget.val}
+                              onChange={(e) => setEditBudget({ id: c.id, val: e.target.value })}
+                              onKeyDown={(e) => { if (e.key === "Enter") saveBudget(); if (e.key === "Escape") setEditBudget(null); }}
+                              className="w-24 rounded border border-blue-300 px-1.5 py-0.5 text-xs outline-none focus:ring-1 focus:ring-blue-500"
+                              autoFocus
+                            />
+                            <button type="button" onClick={saveBudget} className="text-xs font-medium text-blue-600 hover:text-blue-800">Save</button>
+                          </>
+                        ) : (
+                          <button
+                            type="button"
+                            onClick={() => setEditBudget({ id: c.id, val: String(budget) })}
+                            className="text-xs text-slate-500 underline-offset-2 hover:underline hover:text-slate-700"
+                            title="Click to edit budget"
+                          >
+                            {inr(budget)}
+                          </button>
+                        )}
+                      </div>
                     </div>
                     <div className="h-1.5 overflow-hidden rounded-full bg-slate-100">
                       <div

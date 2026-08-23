@@ -28,3 +28,21 @@ export const fetchCurrentUser = createServerFn({ method: "GET" }).handler(
     return { id: data.user.id, email: data.user.email ?? "" };
   },
 );
+
+// Auto-creates a minimal founders row for the current auth user if one doesn't
+// exist yet. This prevents FK violations on notes.owner_id and
+// prelaunch_expenses.logged_by which both reference founders(id).
+export const ensureFounder = createServerFn({ method: "GET" }).handler(
+  async () => {
+    const supabase = getSupabaseServerClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
+    const name = (user.email ?? "Founder").split("@")[0].replace(/[._-]/g, " ");
+    const initial = name[0]?.toUpperCase() ?? "F";
+    await supabase.from("founders").upsert(
+      { id: user.id, name, initial, color: "#2563EB" },
+      { onConflict: "id", ignoreDuplicates: true },
+    );
+  },
+);
+
