@@ -9,7 +9,7 @@ const fetchDashboard = createServerFn({ method: "GET" }).handler(async () => {
     await Promise.all([
       supabase.from("tasks").select("status"),
       supabase.from("prelaunch_categories").select("budget"),
-      supabase.from("prelaunch_expenses").select("amount, note, created_at").order("created_at", { ascending: false }).limit(5),
+      supabase.from("prelaunch_expenses").select("amount, note, created_at, logged_by").order("created_at", { ascending: false }),
       supabase.from("blockers").select("id, title").eq("resolved", false),
     ]);
 
@@ -19,7 +19,7 @@ const fetchDashboard = createServerFn({ method: "GET" }).handler(async () => {
   const totalBudget = (categories ?? []).reduce((s, c) => s + Number(c.budget), 0);
   const totalSpent = (expenses ?? []).reduce((s, e) => s + Number(e.amount), 0);
 
-  return { completion, totalTasks, doneTasks, totalBudget, totalSpent, recentExpenses: expenses ?? [], openBlockers: blockers ?? [] };
+  return { completion, totalTasks, doneTasks, totalBudget, totalSpent, allExpenses: expenses ?? [], recentExpenses: (expenses ?? []).slice(0, 5), openBlockers: blockers ?? [] };
 });
 
 export const Route = createFileRoute("/_authed/")({ staleTime: Infinity,
@@ -38,7 +38,7 @@ export const Route = createFileRoute("/_authed/")({ staleTime: Infinity,
       const completion = totalTasks > 0 ? Math.round((doneTasks / totalTasks) * 100) : 0;
       const totalBudget = (categories ?? []).reduce((s, c) => s + Number(c.budget), 0);
       const totalSpent = (expenses ?? []).reduce((s, e) => s + Number(e.amount), 0);
-      return { completion, totalTasks, doneTasks, totalBudget, totalSpent, recentExpenses: expenses ?? [], openBlockers: blockers ?? [] };
+      return { completion, totalTasks, doneTasks, totalBudget, totalSpent, allExpenses: expenses ?? [], recentExpenses: (expenses ?? []).slice(0, 5), openBlockers: blockers ?? [] };
     }
     return fetchDashboard();
   },
@@ -46,8 +46,19 @@ export const Route = createFileRoute("/_authed/")({ staleTime: Infinity,
 });
 
 function Dashboard() {
-  const { completion, doneTasks, totalTasks, totalBudget, totalSpent, recentExpenses, openBlockers } = Route.useLoaderData();
+  const { completion, doneTasks, totalTasks, totalBudget, totalSpent, allExpenses, recentExpenses, openBlockers } = Route.useLoaderData();
+  const { founders, user } = Route.useRouteContext();
   const spentPct = totalBudget > 0 ? Math.round((totalSpent / totalBudget) * 100) : 0;
+
+  // Balance: how much each founder paid vs their fair share
+  const fairShare = founders.length > 0 ? totalSpent / founders.length : 0;
+  const balances = founders.map((f) => {
+    const paid = (allExpenses as { amount: number; logged_by: string | null }[])
+      .filter((e) => e.logged_by === f.id)
+      .reduce((s, e) => s + Number(e.amount), 0);
+    return { founder: f, paid, net: paid - fairShare }; // positive = others owe them
+  });
+  const myBalance = balances.find((b) => b.founder.id === user.id);
 
   return (
     <div className="min-h-full">
@@ -108,10 +119,63 @@ function Dashboard() {
           <p className="mt-2 text-xs text-slate-400">{spentPct}% used</p>
         </div>
 
+        {/* Expense split / balances */}
+        {totalSpent > 0 && founders.length > 0 && (
+          <div className="rounded-xl border border-slate-200 bg-white p-6">
+            <div className="mb-4 flex items-center justify-between">
+              <h2 className="text-sm font-semibold text-slate-900">Expense split</h2>
+              <span className="text-xs text-slate-400">Fair share: {inr(Math.round(fairShare))} each</span>
+            </div>
+
+            {/* My balance highlight */}
+            {myBalance && (
+              <div className={`mb-4 rounded-lg px-4 py-3 ${myBalance.net > 0 ? "bg-green-50 border border-green-200" : myBalance.net < 0 ? "bg-amber-50 border border-amber-200" : "bg-slate-50 border border-slate-200"}`}>
+                <p className="text-xs text-slate-500">Your balance</p>
+                {myBalance.net > 0 ? (
+                  <p className="text-sm font-semibold text-green-700">Others owe you {inr(Math.round(myBalance.net))}</p>
+                ) : myBalance.net < 0 ? (
+                  <p className="text-sm font-semibold text-amber-700">You owe {inr(Math.round(-myBalance.net))} total</p>
+                ) : (
+                  <p className="text-sm font-semibold text-slate-700">You're settled up</p>
+                )}
+                <p className="mt-0.5 text-xs text-slate-400">You paid {inr(myBalance.paid)} of {inr(Math.round(fairShare))} fair share</p>
+              </div>
+            )}
+
+            {/* Per-founder breakdown */}
+            <div className="space-y-2">
+              {balances.map(({ founder, paid, net }) => (
+                <div key={founder.id} className={`flex items-center gap-3 rounded-lg px-3 py-2.5 ${founder.id === user.id ? "bg-slate-50" : ""}`}>
+                  <div
+                    className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs font-bold text-white"
+                    style={{ background: founder.color }}
+                  >
+                    {founder.initial}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-slate-800">
+                      {founder.name}{founder.id === user.id ? " (you)" : ""}
+                    </p>
+                    <p className="text-xs text-slate-400">Paid {inr(paid)}</p>
+                  </div>
+                  <div className="text-right shrink-0">
+                    {net > 50 ? (
+                      <span className="text-xs font-semibold text-green-600">+{inr(Math.round(net))}</span>
+                    ) : net < -50 ? (
+                      <span className="text-xs font-semibold text-amber-600">−{inr(Math.round(-net))}</span>
+                    ) : (
+                      <span className="text-xs text-slate-400">settled</span>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
         {/* Recent spending */}
         <div className="rounded-xl border border-slate-200 bg-white p-6">
-          <h2 className="mb-4 text-sm font-semibold text-slate-900">Recent spending</h2>
-          {recentExpenses.length === 0 ? (
+          <h2 className="mb-4 text-sm font-semibold text-slate-900">Recent spending</h2>          {recentExpenses.length === 0 ? (
             <p className="text-sm text-slate-400">Nothing logged yet.</p>
           ) : (
             <div className="divide-y divide-slate-100">

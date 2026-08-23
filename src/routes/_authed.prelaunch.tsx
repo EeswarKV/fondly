@@ -6,14 +6,14 @@ import { getSupabaseBrowserClient } from "#/utils/supabase/client";
 import { inr } from "#/components/ui";
 
 type Category = { id: string; name: string; budget: number };
-type Expense = { id: string; category_id: string; note: string; amount: number; created_at: string };
+type Expense = { id: string; category_id: string; note: string; amount: number; created_at: string; logged_by: string | null };
 
 const fetchPrelaunch = createServerFn({ method: "GET" }).handler(async () => {
   const supabase = getSupabaseServerClient();
   const [{ data: categories }, { data: expenses }] = await Promise.all([
     supabase.from("prelaunch_categories").select("id, name, budget").order("name"),
     supabase.from("prelaunch_expenses")
-      .select("id, category_id, note, amount, created_at")
+      .select("id, category_id, note, amount, created_at, logged_by")
       .order("created_at", { ascending: false }),
   ]);
   return {
@@ -30,7 +30,7 @@ export const Route = createFileRoute("/_authed/prelaunch")({
       const supabase = getSupabaseBrowserClient();
       const [{ data: categories }, { data: expenses }] = await Promise.all([
         supabase.from("prelaunch_categories").select("id, name, budget").order("name"),
-        supabase.from("prelaunch_expenses").select("id, category_id, note, amount, created_at").order("created_at", { ascending: false }),
+        supabase.from("prelaunch_expenses").select("id, category_id, note, amount, created_at, logged_by").order("created_at", { ascending: false }),
       ]);
       return { categories: (categories ?? []) as Category[], expenses: (expenses ?? []) as Expense[] };
     }
@@ -41,6 +41,7 @@ export const Route = createFileRoute("/_authed/prelaunch")({
 
 function PreLaunch() {
   const { categories, expenses } = Route.useLoaderData();
+  const { user, founders } = Route.useRouteContext();
   const router = useRouter();
 
   const totalBudget = categories.reduce((s, c) => s + Number(c.budget), 0);
@@ -117,6 +118,7 @@ function PreLaunch() {
   const [amount, setAmount] = useState("");
   const [note,   setNote]   = useState("");
   const [categoryId, setCategoryId] = useState(categories[0]?.id ?? "");
+  const [paidBy, setPaidBy] = useState(user.id);
   const [saving, setSaving] = useState(false);
   const [expErr, setExpErr] = useState<string | null>(null);
 
@@ -131,7 +133,7 @@ function PreLaunch() {
       category_id: categoryId,
       note,
       amount: Number(amount),
-      logged_by: null,
+      logged_by: paidBy || null,
     });
     setSaving(false);
     if (error) { setExpErr(error.message); return; }
@@ -320,6 +322,18 @@ function PreLaunch() {
                   />
                 </div>
               </div>
+              <div>
+                <label className="mb-1 block text-xs font-medium text-slate-600">Paid by</label>
+                <select
+                  value={paidBy}
+                  onChange={(e) => setPaidBy(e.target.value)}
+                  className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm text-slate-900 outline-none focus:border-blue-800 focus:ring-2 focus:ring-blue-800/20"
+                >
+                  {founders.map((f) => (
+                    <option key={f.id} value={f.id}>{f.name}{f.id === user.id ? " (me)" : ""}</option>
+                  ))}
+                </select>
+              </div>
               <button
                 type="button"
                 onClick={addExpense}
@@ -337,11 +351,14 @@ function PreLaunch() {
                 <div className="space-y-1.5">
                   {expenses.slice(0, 6).map((e) => {
                     const cat = categories.find((c) => c.id === e.category_id);
+                    const payer = founders.find((f) => f.id === e.logged_by);
                     return (
                       <div key={e.id} className="flex items-start justify-between gap-2">
                         <div className="min-w-0">
                           <p className="text-xs text-slate-700 truncate">{e.note}</p>
-                          {cat && <p className="text-[10px] text-slate-400">{cat.name}</p>}
+                          <p className="text-[10px] text-slate-400">
+                            {cat?.name}{payer ? ` · ${payer.name === founders.find(f => f.id === user.id)?.name ? "you" : payer.name} paid` : ""}
+                          </p>
                         </div>
                         <span className="shrink-0 text-xs font-medium text-slate-900">{inr(Number(e.amount))}</span>
                       </div>
