@@ -13,12 +13,13 @@ const config = defineConfig({
   resolve: { tsconfigPaths: true },
   plugins: [
     !isVercel && devtools(),
-    nitro({
-      preset: isVercel ? 'vercel' : undefined,
-      rollupConfig: { external: [/^@sentry\//] },
-    }),
+    nitro({ rollupConfig: { external: [/^@sentry\//] } }),
     tailwindcss(),
-    tanstackStart(),
+    tanstackStart({
+      server: {
+        preset: isVercel ? 'vercel' : undefined,
+      },
+    }),
     viteReact(),
   ],
 })
