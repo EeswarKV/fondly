@@ -42,8 +42,9 @@ function AuthedLayout() {
   const router = useRouter();
 
   return (
-    <div className="flex h-screen overflow-hidden bg-slate-50">
-      {/* Sidebar — hidden on mobile, visible on lg+ */}
+    /* 100dvh accounts for iOS Safari's collapsible address bar; lg uses classic flex-row */
+    <div className="flex flex-col h-[100dvh] bg-slate-50 lg:h-screen lg:flex-row lg:overflow-hidden">
+      {/* Desktop sidebar — hidden on mobile */}
       <aside className="hidden lg:flex w-56 shrink-0 flex-col bg-white border-r border-slate-200">
         {/* Logo */}
         <div className="flex items-center gap-2.5 border-b border-slate-100 px-4 py-[18px]">
@@ -101,65 +102,70 @@ function AuthedLayout() {
         </div>
       </aside>
 
-      {/* Main content — extra bottom padding on mobile for the bottom nav */}
-      {/* Mobile top bar — only on small screens */}
-      <header className="fixed left-0 right-0 top-0 z-40 flex h-14 shrink-0 items-center border-b border-slate-200 bg-white/95 px-4 backdrop-blur-sm lg:hidden"
-              style={{ paddingTop: 'env(safe-area-inset-top)' }}>
-        <div className="flex items-center gap-2.5">
+      {/* Mobile wrapper — flex column so top bar + scroll area + bottom nav are in-flow (no fixed positioning).
+          Fixed positioning on iOS causes the first scroll gesture to be eaten and pages to hang. */}
+      <div className="flex flex-1 flex-col min-h-0 lg:overflow-hidden">
+
+        {/* Mobile top bar — in-flow, NOT fixed */}
+        <header
+          className="shrink-0 flex items-center gap-2.5 border-b border-slate-200 bg-white px-4 lg:hidden"
+          style={{ height: 'calc(56px + env(safe-area-inset-top))', paddingTop: 'env(safe-area-inset-top)' }}
+        >
           <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-blue-800 text-sm font-bold text-white select-none">◆</div>
           <span className="text-sm font-semibold text-slate-800">Fondly</span>
-        </div>
-      </header>
+        </header>
 
-      {/* Main content — top padding on mobile for the fixed header */}
-      <main className="flex-1 overflow-y-auto pt-14 pb-20 lg:pt-0 lg:pb-0">
-        <Outlet />
-      </main>
+        {/* Main content — scrollable middle section */}
+        <main className="flex-1 overflow-y-auto overscroll-contain lg:overflow-y-auto">
+          <Outlet />
+        </main>
 
-      {/* Bottom navigation — native-style, mobile only */}
-      <nav
-        className="fixed bottom-0 left-0 right-0 z-50 lg:hidden bg-white border-t border-slate-100"
-        style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
-      >
-        <div className="flex items-stretch">
-          {NAV.map((n) => (
-            <Link
-              key={n.to}
-              to={n.to}
-              activeOptions={{ exact: n.to === "/" }}
-              className="flex-1"
-              style={{ textDecoration: "none" }}
-            >
-              {({ isActive }: { isActive: boolean }) => (
-                <div className="flex flex-col items-center gap-0.5 px-1 pb-1.5 pt-2 active:opacity-60">
-                  <div className={`flex h-8 w-12 items-center justify-center rounded-2xl text-xl transition-all ${
-                    isActive ? "bg-blue-50 scale-105" : ""
-                  }`}>
-                    <span className={isActive ? "text-blue-800" : "text-slate-400"}>{n.icon}</span>
+        {/* Bottom navigation — in-flow, NOT fixed — this is what fixes the iOS hang */}
+        <nav
+          className="shrink-0 lg:hidden bg-white border-t border-slate-100"
+          style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
+        >
+          <div className="flex items-stretch">
+            {NAV.map((n) => (
+              <Link
+                key={n.to}
+                to={n.to}
+                activeOptions={{ exact: n.to === "/" }}
+                className="flex-1"
+                style={{ textDecoration: "none" }}
+              >
+                {({ isActive }: { isActive: boolean }) => (
+                  <div className="flex flex-col items-center gap-0.5 px-1 pb-1.5 pt-2 active:opacity-60 transition-opacity">
+                    <div className={`flex h-8 w-12 items-center justify-center rounded-2xl text-xl transition-all ${
+                      isActive ? "bg-blue-50 scale-105" : ""
+                    }`}>
+                      <span className={isActive ? "text-blue-800" : "text-slate-400"}>{n.icon}</span>
+                    </div>
+                    <span className={`text-[10px] font-semibold tracking-wide ${
+                      isActive ? "text-blue-800" : "text-slate-400"
+                    }`}>
+                      {n.label}
+                    </span>
                   </div>
-                  <span className={`text-[10px] font-semibold tracking-wide transition-colors ${
-                    isActive ? "text-blue-800" : "text-slate-400"
-                  }`}>
-                    {n.label}
-                  </span>
-                </div>
-              )}
-            </Link>
-          ))}
-          <button
-            type="button"
-            onClick={async () => {
-              const { getSupabaseBrowserClient } = await import("#/utils/supabase/client");
-              await getSupabaseBrowserClient().auth.signOut();
-              router.navigate({ to: "/login" });
-            }}
-            className="flex flex-1 flex-col items-center gap-0.5 px-1 pb-1.5 pt-2 active:opacity-60"
-          >
-            <div className="flex h-8 w-12 items-center justify-center rounded-2xl text-xl text-slate-400">⏻</div>
-            <span className="text-[10px] font-semibold tracking-wide text-slate-400">Out</span>
-          </button>
-        </div>
-      </nav>
+                )}
+              </Link>
+            ))}
+            <button
+              type="button"
+              onClick={async () => {
+                const { getSupabaseBrowserClient } = await import("#/utils/supabase/client");
+                await getSupabaseBrowserClient().auth.signOut();
+                router.navigate({ to: "/login" });
+              }}
+              className="flex flex-1 flex-col items-center gap-0.5 px-1 pb-1.5 pt-2 active:opacity-60 transition-opacity"
+            >
+              <div className="flex h-8 w-12 items-center justify-center rounded-2xl text-xl text-slate-400">⏻</div>
+              <span className="text-[10px] font-semibold tracking-wide text-slate-400">Out</span>
+            </button>
+          </div>
+        </nav>
+
+      </div>
     </div>
   );
 }

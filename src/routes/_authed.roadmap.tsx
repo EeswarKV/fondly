@@ -403,20 +403,20 @@ function Roadmap() {
       </div>
 
       <div className="p-4 lg:p-8 space-y-5">
-        {/* Tab switcher */}
-        <div className="flex items-center gap-1 overflow-x-auto rounded-xl border border-slate-200 bg-white p-1 w-fit max-w-full">
+        {/* Tab switcher — full width on mobile, compact on desktop */}
+        <div className="flex w-full rounded-xl border border-slate-200 bg-white p-1 lg:w-fit">
           {(['business', 'chocolate'] as const).map((t) => (
             <button
               key={t}
               type="button"
               onClick={() => { setActiveTab(t); setAddingToPhase(null); setAddingPhase(false); }}
-              className={`rounded-lg px-5 py-2 text-sm font-medium transition-colors ${
+              className={`flex-1 rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
                 activeTab === t
                   ? 'bg-blue-800 text-white shadow-sm'
                   : 'text-slate-600 hover:text-slate-900'
               }`}
             >
-              {t === 'business' ? '🏢 Business' : '🍫 Chocolate making'}
+              {t === 'business' ? '🏢 Business' : '🍫 Chocolate'}
             </button>
           ))}
         </div>
@@ -499,10 +499,10 @@ function Roadmap() {
                   <button
                     type="button"
                     onClick={() => deletePhase(phase.id, phase.label)}
-                    className="rounded-md border border-red-200 bg-red-50 px-2 py-0.5 text-xs font-medium text-red-600 transition-colors hover:bg-red-100"
+                    className="flex h-7 w-7 items-center justify-center rounded-lg border border-red-200 bg-red-50 text-sm text-red-500 transition-colors hover:bg-red-100"
                     title="Delete this phase and all its tasks"
                   >
-                    Delete
+                    🗑
                   </button>
 
                   {!isAdding && (
