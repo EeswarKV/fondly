@@ -7,6 +7,19 @@
   --font-sans: "Manrope", ui-sans-serif, system-ui, sans-serif;
 }
 
+/* ── Mobile native feel ──────────────────────────────────── */
+
+/* Remove tap highlight on Android/iOS */
+* { -webkit-tap-highlight-color: transparent; }
+
+/* Prevent iOS Safari from zooming on input focus (needs font-size ≥ 16px) */
+@media (max-width: 1023px) {
+  input, textarea, select { font-size: 16px; }
+}
+
+/* Respect the iPhone notch / Dynamic Island */
+body { padding-bottom: env(safe-area-inset-bottom); }
+
 :root {
   --sea-ink: #173a40;
   --sea-ink-soft: #416166;
