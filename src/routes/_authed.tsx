@@ -1,14 +1,28 @@
 import { Link, Outlet, createFileRoute, redirect, useRouter } from "@tanstack/react-router";
-import { useEffect } from "react";
 import { Avatar } from "#/components/ui";
 import { fetchSession } from "#/utils/founders";
+import type { Founder } from "#/utils/founders";
 
 export const Route = createFileRoute("/_authed")({
-  // staleTime: Infinity means auth + founders are fetched ONCE per page load.
-  // Subsequent sidebar navigation is instant — no network call on every click.
-  // Data is refreshed only when router.invalidate() is called (after mutations).
   staleTime: Infinity,
   beforeLoad: async () => {
+    // Client-side navigation: read session from local storage (instant, no network)
+    // then fetch founders directly from Supabase — bypasses Vercel cold start entirely.
+    if (typeof window !== "undefined") {
+      const { getSupabaseBrowserClient } = await import("#/utils/supabase/client");
+      const supabase = getSupabaseBrowserClient();
+      const { data: { session } } = await supabase.auth.getSession(); // local, ~0ms
+      if (!session) throw redirect({ to: "/login" });
+      const { data: founders } = await supabase
+        .from("founders")
+        .select("id, name, initial, color")
+        .order("name");
+      return {
+        user: { id: session.user.id, email: session.user.email ?? "" },
+        founders: (founders ?? []) as Founder[],
+      };
+    }
+    // SSR: use server function (runs in-process, no HTTP hop)
     const session = await fetchSession();
     if (!session) throw redirect({ to: "/login" });
     return session;
@@ -26,14 +40,6 @@ const NAV = [
 function AuthedLayout() {
   const { user, founders } = Route.useRouteContext();
   const router = useRouter();
-
-  // Preload all sibling routes in the background so the first click is instant
-  useEffect(() => {
-    router.preloadRoute({ to: "/" });
-    router.preloadRoute({ to: "/roadmap" });
-    router.preloadRoute({ to: "/notes" });
-    router.preloadRoute({ to: "/prelaunch" });
-  }, [router]);
 
   return (
     <div className="flex h-screen overflow-hidden bg-slate-50">
