@@ -321,6 +321,7 @@ function Roadmap() {
   const [activeTab, setActiveTab] = useState<'business' | 'chocolate'>('business');
   const [addingPhase, setAddingPhase] = useState(false);
   const [newPhaseLabel, setNewPhaseLabel] = useState('');
+  const [editPhase, setEditPhase] = useState<{ id: string; label: string } | null>(null);
   const [bTitle, setBTitle] = useState("");
   const [bNote,  setBNote]  = useState("");
   const [bBy,    setBBy]    = useState(founders[0]?.id ?? "");
@@ -341,6 +342,21 @@ function Roadmap() {
       tab: activeTab,
     });
     setNewPhaseLabel(''); setAddingPhase(false);
+    router.invalidate();
+  };
+
+  const savePhaseLabel = async () => {
+    if (!editPhase?.label.trim()) return;
+    const supabase = getSupabaseBrowserClient();
+    await supabase.from('phases').update({ label: editPhase.label.trim() }).eq('id', editPhase.id);
+    setEditPhase(null);
+    router.invalidate();
+  };
+
+  const deletePhase = async (id: string, label: string) => {
+    if (!confirm(`Delete phase "${label}" and all its tasks?`)) return;
+    const supabase = getSupabaseBrowserClient();
+    await supabase.from('phases').delete().eq('id', id);
     router.invalidate();
   };
 
@@ -409,10 +425,44 @@ function Roadmap() {
           const isAdding = addingToPhase === phase.id;
           return (
             <div key={phase.id}>
-              <div className="mb-2 flex items-center justify-between">
-                <h2 className="text-sm font-semibold text-slate-800">{phase.label}</h2>
-                <div className="flex items-center gap-3">
+              <div className="mb-2 flex items-center justify-between gap-2">
+                {/* Phase label — click to rename */}
+                {editPhase?.id === phase.id ? (
+                  <div className="flex flex-1 items-center gap-2">
+                    <input
+                      value={editPhase.label}
+                      onChange={(e) => setEditPhase({ ...editPhase, label: e.target.value })}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') savePhaseLabel();
+                        if (e.key === 'Escape') setEditPhase(null);
+                      }}
+                      className="flex-1 rounded-lg border border-blue-300 bg-white px-2 py-1 text-sm font-semibold text-slate-900 outline-none focus:ring-2 focus:ring-blue-500"
+                      autoFocus
+                    />
+                    <button type="button" onClick={savePhaseLabel} className="text-xs font-medium text-blue-800">Save</button>
+                    <button type="button" onClick={() => setEditPhase(null)} className="text-xs text-slate-400">✕</button>
+                  </div>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => setEditPhase({ id: phase.id, label: phase.label })}
+                    className="group flex items-center gap-1.5 text-left"
+                    title="Click to rename this phase"
+                  >
+                    <h2 className="text-sm font-semibold text-slate-800">{phase.label}</h2>
+                    <span className="hidden text-xs text-slate-300 group-hover:inline">✎</span>
+                  </button>
+                )}
+                <div className="flex shrink-0 items-center gap-3">
                   <span className="text-xs text-slate-400">{pDone}/{phaseTasks.length} done</span>
+                  <button
+                    type="button"
+                    onClick={() => deletePhase(phase.id, phase.label)}
+                    className="text-xs text-slate-300 hover:text-red-400 transition-colors"
+                    title="Delete phase"
+                  >
+                    ×
+                  </button>
                   {!isAdding && (
                     <button
                       type="button"
