@@ -360,6 +360,20 @@ function Roadmap() {
     router.invalidate();
   };
 
+  const movePhase = async (phase: Phase, direction: 'up' | 'down') => {
+    const sorted = [...visiblePhases].sort((a, b) => a.sort_order - b.sort_order);
+    const idx = sorted.findIndex((p) => p.id === phase.id);
+    const swapIdx = direction === 'up' ? idx - 1 : idx + 1;
+    if (swapIdx < 0 || swapIdx >= sorted.length) return;
+    const swapWith = sorted[swapIdx];
+    const supabase = getSupabaseBrowserClient();
+    await Promise.all([
+      supabase.from('phases').update({ sort_order: swapWith.sort_order }).eq('id', phase.id),
+      supabase.from('phases').update({ sort_order: phase.sort_order }).eq('id', swapWith.id),
+    ]);
+    router.invalidate();
+  };
+
   const addBlocker = async () => {
     if (!bTitle.trim()) return;
     const supabase = getSupabaseBrowserClient();
@@ -419,10 +433,12 @@ function Roadmap() {
         </div>
 
         {/* Phases for active tab */}
-        {visiblePhases.map((phase) => {
+        {visiblePhases.map((phase, phaseIdx) => {
           const phaseTasks = tasks.filter((t) => t.phase_id === phase.id);
           const pDone = phaseTasks.filter((t) => t.status === "done").length;
           const isAdding = addingToPhase === phase.id;
+          const isFirst = phaseIdx === 0;
+          const isLast = phaseIdx === visiblePhases.length - 1;
           return (
             <div key={phase.id}>
               <div className="mb-2 flex items-center justify-between gap-2">
@@ -447,29 +463,55 @@ function Roadmap() {
                     type="button"
                     onClick={() => setEditPhase({ id: phase.id, label: phase.label })}
                     className="group flex items-center gap-1.5 text-left"
-                    title="Click to rename this phase"
+                    title="Click to rename"
                   >
                     <h2 className="text-sm font-semibold text-slate-800">{phase.label}</h2>
                     <span className="hidden text-xs text-slate-300 group-hover:inline">✎</span>
                   </button>
                 )}
-                <div className="flex shrink-0 items-center gap-3">
-                  <span className="text-xs text-slate-400">{pDone}/{phaseTasks.length} done</span>
+
+                {/* Phase controls: reorder + count + delete + add task */}
+                <div className="flex shrink-0 items-center gap-2">
+                  {/* Reorder arrows */}
+                  <div className="flex flex-col">
+                    <button
+                      type="button"
+                      onClick={() => movePhase(phase, 'up')}
+                      disabled={isFirst}
+                      className="text-slate-300 hover:text-blue-700 disabled:opacity-20 leading-none text-xs"
+                      title="Move up"
+                    >
+                      ▲
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => movePhase(phase, 'down')}
+                      disabled={isLast}
+                      className="text-slate-300 hover:text-blue-700 disabled:opacity-20 leading-none text-xs"
+                      title="Move down"
+                    >
+                      ▼
+                    </button>
+                  </div>
+
+                  <span className="text-xs text-slate-400">{pDone}/{phaseTasks.length}</span>
+
                   <button
                     type="button"
                     onClick={() => deletePhase(phase.id, phase.label)}
-                    className="text-xs text-slate-300 hover:text-red-400 transition-colors"
-                    title="Delete phase"
+                    className="rounded-md border border-red-200 bg-red-50 px-2 py-0.5 text-xs font-medium text-red-600 transition-colors hover:bg-red-100"
+                    title="Delete this phase and all its tasks"
                   >
-                    ×
+                    Delete
                   </button>
+
                   {!isAdding && (
                     <button
                       type="button"
                       onClick={() => setAddingToPhase(phase.id)}
                       className="text-xs font-medium text-blue-800 hover:text-blue-900"
                     >
-                      + Add task
+                      + Task
                     </button>
                   )}
                 </div>
