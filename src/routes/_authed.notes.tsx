@@ -44,6 +44,7 @@ function Notes() {
   const [err, setErr] = useState<string | null>(null);
   const [editReminderFor, setEditReminderFor] = useState<string | null>(null);
   const [reminderVal, setReminderVal] = useState("");
+  const [editNote, setEditNote] = useState<{ id: string; text: string } | null>(null);
 
   const now = new Date();
   const sorted = [...notes].sort((a, b) => {
@@ -87,6 +88,14 @@ function Notes() {
       .update({ reminder_at: reminderVal ? new Date(reminderVal).toISOString() : null })
       .eq("id", noteId);
     setEditReminderFor(null);
+    router.invalidate();
+  };
+
+  const saveNoteText = async () => {
+    if (!editNote?.text.trim()) return;
+    const supabase = getSupabaseBrowserClient();
+    await supabase.from("notes").update({ text: editNote.text.trim() }).eq("id", editNote.id);
+    setEditNote(null);
     router.invalidate();
   };
 
@@ -159,9 +168,34 @@ function Notes() {
                     className="mt-0.5 h-4 w-4 shrink-0 cursor-pointer accent-blue-600"
                   />
                   <div className="min-w-0 flex-1">
-                    <p className={`text-sm text-slate-900 ${n.done ? "line-through text-slate-400" : ""}`}>
-                      {n.text}
-                    </p>
+                    {editNote?.id === n.id ? (
+                      <div className="space-y-1.5">
+                        <textarea
+                          value={editNote.text}
+                          onChange={(e) => setEditNote({ ...editNote, text: e.target.value })}
+                          onKeyDown={(e) => { if (e.key === 'Escape') setEditNote(null); }}
+                          rows={2}
+                          className="w-full resize-none rounded-lg border border-blue-300 bg-white px-3 py-2 text-sm text-slate-900 outline-none focus:ring-2 focus:ring-blue-500/20"
+                          autoFocus
+                        />
+                        <div className="flex gap-2">
+                          <button type="button" onClick={saveNoteText} className="rounded-md bg-blue-800 px-3 py-1 text-xs font-medium text-white hover:bg-blue-900">Save</button>
+                          <button type="button" onClick={() => setEditNote(null)} className="rounded-md border border-slate-200 px-3 py-1 text-xs text-slate-500 hover:bg-slate-50">Cancel</button>
+                        </div>
+                      </div>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={() => setEditNote({ id: n.id, text: n.text })}
+                        className="group w-full text-left"
+                        title="Click to edit"
+                      >
+                        <p className={`text-sm text-slate-900 ${n.done ? "line-through text-slate-400" : ""}`}>
+                          {n.text}
+                        </p>
+                        <span className="hidden text-[10px] text-slate-300 group-hover:inline">click to edit</span>
+                      </button>
+                    )}
                     {editReminderFor === n.id ? (
                       <div className="mt-1.5 flex items-center gap-2">
                         <input
